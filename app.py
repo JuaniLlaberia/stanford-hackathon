@@ -358,20 +358,45 @@ with tab_src:
     targets = [ca for ca in decision.claims if ca.status in ("unverified", "unchecked", "weak_support", "contradiction_questionable") and ca.material]
     if not targets:
         st.caption("No material unverified or unchecked claims.")
-    elif st.button(f"Find source leads for {len(targets)} claims",
+    elif st.button(f"Find and check sources for {len(targets)} claims",
                    type="primary" if decision.action == "PULL_SOURCE" else "secondary"):
-        with st.spinner("Looking for sources…"):
-            for ca in targets:
-                case["leads"][ca.claim_id] = actions.pull_source(ca, report).model_dump()
-        audit.log("pull_source", report=name, persona=pkey, leads=case["leads"])
+        with st.spinner("Asking for sources, fetching the pages, checking the figures…"):
+            for ld in actions.pull_and_check(targets, report):
+                case["leads"][ld.claim_id] = ld.model_dump()
+        audit.log("pull_source", report=name, persona=pkey,
+                  leads={k: {"url": v["url"], "verdict": (v["check"] or {}).get("verdict"), "fetch_error": v["fetch_error"]}
+                         for k, v in case["leads"].items()})
+    st.caption("The LLM only suggests where to look. Code fetches the page, finds the sentence with the claim's figure "
+               "and checks it (same figure and scale, ±0.5%). ✅ the source states it · ❌ the source says something else "
+               "· ⚪ not found · 🏷️ page could not be fetched: still a lead, not evidence.")
     for cid, ld in case["leads"].items():
         ld = actions.Lead.model_validate(ld)
-        st.markdown(f"**{cid}** · 🏷️ *{ld.label}* · via {ld.via}  \n{ld.source_name}"
-                    + (f" · [{ld.url}]({ld.url})" if ld.url else "")
-                    + f"  \nquery: `{ld.query}`" + (f"  \nexpected: {ld.expected_value}" if ld.expected_value else "")
-                    + (f"  \n_{ld.why}_" if ld.why else ""))
-    if case["leads"]:
-        st.caption("Leads carry zero evidential weight until a human confirms them (answer “I have a source” above).")
+        icon, words = actions.lead_verdict(ld)
+        with st.container(border=True):
+            label = f" · *{ld.label}*" if ld.label != words else ""
+            st.markdown(f"**{cid}** · {icon} **{words}**{label} · via {ld.via}  \n{ld.source_name}"
+                        + (f" · [{ld.url}]({ld.url})" if ld.url else ""))
+            if ld.check:
+                st.markdown(f"_{ld.check.reason}_")
+            if ld.excerpt:
+                st.markdown(f"> {ld.excerpt}")
+            if ld.fetch_error:
+                st.caption(f"fetch: {ld.fetch_error}")
+            st.caption(f"query: `{ld.query}`" + (f" · expected: {ld.expected_value}" if ld.expected_value else "")
+                       + (f" · {ld.why}" if ld.why else ""))
+            unresolved = cid not in case["resolutions"] and any(q.ref == cid for q in decision.questions)
+            if ld.check and ld.check.verdict == "supports" and unresolved:
+                if st.button(f"Use this source for {cid}", key=f"{case_key}::use::{cid}"):
+                    res = f"source:{ld.url}"
+                    case["resolutions"][cid] = res
+                    d = run_assess(report, persona, case["resolutions"])
+                    case["timeline"].append({"action": d.action, "answers": {cid: res},
+                                             "why": f"human accepted the checked source for {cid}"})
+                    case["decision"] = d.model_dump()
+                    case["drafts"].pop("rewrite", None)
+                    audit.log("human_answers", report=name, persona=pkey, answers={cid: res}, action=d.action,
+                              lead_check=ld.check.model_dump())
+                    st.rerun()
 
 with tab_esc:
     if st.button("Draft escalation note", type="primary" if decision.action in ("ESCALATE", "BLOCK") else "secondary"):

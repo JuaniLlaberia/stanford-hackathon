@@ -161,3 +161,36 @@ def test_fallback_removal_keeps_backed_claim_sharing_a_sentence():
     ]})
     out = actions.rewrite_fallback(r, dec).text
     assert "97.7" in out and "115" not in out and "[C4: 10-K]" in out
+
+
+def test_find_excerpt_needs_topic_scope_and_year():
+    geely = "Geely Group: 1.49 million new-energy vehicles"
+    assert actions.find_excerpt(geely, "In 2024 Geely Group sold 1.49 million new-energy vehicles.") is not None
+    # different figure, different scope (all vehicles vs new-energy): not a contradiction
+    assert actions.find_excerpt(geely, "Geely Group produced 2.17 million vehicles in 2024.", "2024") is None
+    # same figure, unrelated topic: not support
+    assert actions.find_excerpt("China made roughly 70% of global EV production",
+                                "More than 70% of consumers are optimistic.") is None
+
+
+def test_check_lead_verdicts(monkeypatch):
+    lead = actions.Lead(claim_id="U1", source_name="x", url="https://a.example/byd", query="q",
+                        alternates=["https://b.example/byd"])
+    pages = {"https://a.example/byd": OSError("403"),
+             "https://b.example/byd": "Intro. BYD sold 4,272,145 vehicles in 2024, a record. Other text."}
+
+    def fake(url):
+        if isinstance(pages[url], Exception):
+            raise pages[url]
+        return pages[url]
+
+    monkeypatch.setattr(actions, "fetch_page", fake)
+    out = actions.check_lead(lead, "BYD: 4.27 million vehicles", "2024")
+    assert out.check.verdict == "supports" and out.url.startswith("https://b.") and actions.lead_verdict(out)[0] == "✅"
+    pages["https://b.example/byd"] = "BYD sold 3.02 million new-energy vehicles in 2024 according to its filing."
+    out = actions.check_lead(lead, "BYD sold 4.27 million new-energy vehicles in 2024", "2024")
+    assert out.check.verdict == "contradicts" and actions.lead_verdict(out)[0] == "❌"
+    pages["https://b.example/byd"] = OSError("403")
+    out = actions.check_lead(lead, "BYD: 4.27 million vehicles")
+    assert actions.check_lead(lead.model_copy(update={"alternates": []}), "x 4.27 million").check is None
+    assert out.check is None and out.label == "lead, not evidence" and actions.lead_verdict(out)[0] == "🏷️"

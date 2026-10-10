@@ -5,15 +5,20 @@ The LLM only drafts text; it never changes the decision, and its rewrites may no
 """
 from __future__ import annotations
 
+import html as htmllib
+import io
 import re
 import unicodedata
+import urllib.request
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from urllib.parse import quote_plus
+from urllib.parse import quote_plus, urlparse
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from agent.coverage import figures
 from agent.llm import LLMError, chat_json
+from agent.verify import LeadCheck, _same, quantities, verify_lead
 from agent.schema import Claim, ClaimAssessment, Decision, Persona, Report
 
 LEAD_LABEL = "lead, not evidence"
@@ -36,6 +41,10 @@ class Lead(BaseModel):
     expected_value: str | None = None
     why: str = ""
     via: str = "fallback"
+    alternates: list[str] = Field(default_factory=list)  # more URLs to try if the first cannot be fetched
+    excerpt: str | None = None  # sentence from the fetched page that carries the claim's figure
+    check: LeadCheck | None = None  # verify_lead() result; None = page not fetched, still just a lead
+    fetch_error: str | None = None
 
 
 # ---- text helpers -----------------------------------------------------------------
@@ -255,12 +264,14 @@ def pull_source(ca: ClaimAssessment, report: Report | None = None) -> Lead:
     system = (
         "You suggest the single most authoritative primary source to verify a factual claim (statistics agency, "
         "regulator filing, official company report, international body). Never assert the claim is true. If you "
-        "are not sure of an exact URL, give the publisher's homepage or null."
+        "can, give the direct URL of the page or PDF that states the figure (not a homepage); otherwise null."
     )
     user = f"Claim: {ca.span or ca.text}\nSources the checker already tried:\n{listed or '- none'}"
     schema = {
         "source_name": "publisher + document title",
         "url": "URL or null",
+        "alternates": "list of up to 2 more direct URLs that likely state the figure and allow automated access "
+                      "(e.g. Wikipedia, a news article, a PDF), or []",
         "query": "search query to find the figure",
         "expected_value": "what value that source should show for this claim, or null",
         "why": "one sentence: why this source is authoritative",
@@ -276,9 +287,152 @@ def pull_source(ca: ClaimAssessment, report: Report | None = None) -> Lead:
             claim_id=ca.claim_id, source_name=str(out["source_name"]), url=url, query=str(out["query"]),
             expected_value=(str(out["expected_value"]) if out.get("expected_value") else None),
             why=str(out.get("why", "")), via="llm",
+            alternates=[str(u) for u in (out.get("alternates") or []) if re.match(r"https?://", str(u))][:2],
         )
-    except LLMError:
-        return pull_source_fallback(ca, report)
+    except LLMError as e:
+        lead = pull_source_fallback(ca, report)
+        return lead.model_copy(update={"why": f"{lead.why} (LLM unavailable: {str(e)[:100]})"})
+
+
+# ---- source check: fetch the lead, find the figure, verify_lead() ---------------------
+
+FETCH_TIMEOUT_S = 8
+MAX_BYTES = 3_000_000
+_STOP = {"the", "and", "for", "was", "are", "its", "per", "has", "had", "but", "not", "all", "now", "than",
+         "about", "with", "from", "that", "this", "were", "have", "their", "which", "roughly", "over", "into",
+         "thousand", "million", "billion", "trillion", "percent"}
+_YEARS = re.compile(r"\b(?:19|20)\d{2}\b")
+
+
+def fetch_page(url: str) -> str:
+    """Fetch a URL and return its visible text (HTML or PDF). Raises on any failure."""
+    req = urllib.request.Request(url, headers={
+        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/pdf;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9"})
+    with urllib.request.urlopen(req, timeout=FETCH_TIMEOUT_S) as resp:
+        ctype = resp.headers.get("Content-Type", "")
+        data = resp.read(MAX_BYTES)
+    if "pdf" in ctype or data[:5] == b"%PDF-":
+        import pypdf
+
+        return " ".join("".join(pg.extract_text() or "" for pg in pypdf.PdfReader(io.BytesIO(data)).pages[:60]).split())
+    raw = data.decode(resp.headers.get_content_charset() or "utf-8", errors="replace")
+    raw = re.sub(r"(?is)<(script|style|noscript|svg|head)\b.*?</\1>", " ", raw)
+    raw = re.sub(r"(?s)<[^>]+>", " ", raw)
+    return " ".join(htmllib.unescape(raw).split())
+
+
+def _words(t: str) -> set[str]:
+    return {w for w in re.findall(r"[a-z]{3,}", t.lower()) if w not in _STOP}
+
+
+def _measured(claim_text: str) -> set[str]:
+    """Words naming what each figure counts ("1.49 million new-energy vehicles" -> {energy, vehicles})."""
+    out: set[str] = set()
+    for q in quantities(claim_text):
+        i = claim_text.find(q.raw)
+        if i >= 0:
+            out |= _words(" ".join(claim_text[i + len(q.raw):].split()[:3]))
+    return out
+
+
+def find_excerpt(claim_text: str, page_text: str, context_year: str | None = None) -> str | None:
+    """The page sentence most likely to state the claim's figure.
+
+    A sentence with the same figure wins. A sentence with a *different* figure is only returned (as a possible
+    contradiction) when it is clearly about the same thing: >= 3 shared topic words and the claim's year, if any.
+    Otherwise None: "not found" is safer than a false contradiction.
+    """
+    want = quantities(claim_text)
+    if not want:
+        return None
+    topic = _words(claim_text)
+    years = set(_YEARS.findall(claim_text)) or ({context_year} if context_year else set())
+    need = max(3, round(0.4 * len(topic)))  # contradictions need real context: short claims can only be ✅ or ⚪
+    measured = _measured(claim_text)
+    best, best_score = None, 0.0
+    for sent in re.split(r"(?<=[.!?])\s+", page_text):
+        if len(sent) > 400 or sum(c.isalpha() for c in sent) < 0.45 * len(sent) or "[ edit ]" in sent:
+            continue  # navigation, tables, reference lists
+        have = quantities(sent)
+        if not have:
+            continue
+        matched = sum(any(_same(w, h) for h in have) for w in want)
+        overlap = len(topic & _words(sent))
+        # a rival figure only counts if it is of the same kind and order of magnitude as a claim figure
+        rival = any(h.kind == w.kind and 1 / 3 <= (h.value or 1e-9) / (w.value or 1e-9) <= 3 for h in have for w in want)
+        if matched and overlap >= min(2, len(topic)):
+            score = 10 * matched + overlap
+        elif (rival and overlap >= need and measured <= _words(sent)
+              and (not years or years & set(_YEARS.findall(sent)))):
+            score = overlap  # same topic (and year), different figure: possible contradiction
+        else:
+            continue
+        if score > best_score:
+            best, best_score = sent.strip(), score
+    return best
+
+
+def _fetchable(url: str | None) -> bool:
+    if not url:
+        return False
+    u = urlparse(url)
+    return u.scheme in ("http", "https") and not (u.netloc.endswith("google.com") and u.path.startswith("/search"))
+
+
+def main_year(text: str) -> str | None:
+    """The year the answer is mostly about (claims without their own year inherit it)."""
+    ys = _YEARS.findall(text)
+    return max(set(ys), key=ys.count) if ys else None
+
+
+def check_lead(lead: Lead, claim_text: str, context_year: str | None = None) -> Lead:
+    """Fetch the lead's page (or an alternate) and verify it. If no page can be fetched it stays a lead."""
+    urls = [u for u in [lead.url, *lead.alternates] if _fetchable(u)]
+    if not urls:
+        return lead.model_copy(update={"fetch_error": "no page to fetch (search link or no URL)"})
+    errors = []
+    for url in urls:
+        try:
+            page = fetch_page(url)
+        except Exception as e:
+            errors.append(f"{urlparse(url).netloc}: {type(e).__name__} {getattr(e, 'code', '')}".strip())
+            continue
+        if not page:
+            errors.append(f"{urlparse(url).netloc}: empty page")
+            continue
+        excerpt = find_excerpt(claim_text, page, context_year)
+        if excerpt is None:
+            check = LeadCheck(url=url, verdict="insufficient", reason="no sentence on the page carries the claim's figure")
+        else:
+            check = verify_lead(claim_text, url, excerpt, page)
+        label = "checked source" if check.counts_as_evidence else LEAD_LABEL
+        return lead.model_copy(update={"url": url, "excerpt": excerpt, "check": check, "label": label,
+                                       "fetch_error": ("; ".join(errors) + " → used next URL") if errors else None})
+    return lead.model_copy(update={"fetch_error": "; ".join(errors)})
+
+
+def lead_verdict(lead: Lead) -> tuple[str, str]:
+    """(icon, words) for the UI."""
+    if lead.check is None:
+        return "🏷️", LEAD_LABEL
+    if lead.check.verdict == "supports":
+        return "✅", "the source states it"
+    if lead.check.verdict == "contradicts":
+        return "❌", "the source says something else"
+    return "⚪", "not found in the source"
+
+
+def pull_and_check(cas: list[ClaimAssessment], report: Report | None = None) -> list[Lead]:
+    """pull_source() + check_lead() for each claim, in parallel (LLM + fetch are I/O bound)."""
+    year = main_year(report.analyzed_text) if report else None
+
+    def one(ca: ClaimAssessment) -> Lead:
+        return check_lead(pull_source(ca, report), ca.text, year)
+
+    with ThreadPoolExecutor(max_workers=4) as ex:
+        return list(ex.map(one, cas))
 
 
 # ---- escalation note --------------------------------------------------------------
