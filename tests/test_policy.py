@@ -82,3 +82,8 @@ def test_vacuous():
     assert is_vacuous("2024 global EV market snapshot")
     assert not is_vacuous("Tesla reported $97.7 billion in 2024 revenue.")
     assert not is_vacuous("Permanent remote work removes that ambiguity.")
+
+
+def test_disputed_claim_cites_the_evidence_source():
+    d = assess(load("ev_market"), persona_for("ev_market"))
+    assert status(d, "C1").best_source.startswith("Source 4 · Other")  # the source that says 1.49 million

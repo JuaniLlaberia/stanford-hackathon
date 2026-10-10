@@ -1,7 +1,17 @@
 # Demo script (target 100 s, hard max 120 s)
 
-> Record on the Streamlit app. Pre-load the EV report with the analyst persona. Close other tabs.
-> Rehearse once with the exact clicks below. Numbers are from the real reports (`uv run python -m agent.policy ev_market`).
+> Record on the Streamlit app (`uv run streamlit run app.py`, LLM on). Before recording: sidebar **Reset this case**
+> for EV and AGI, browser zoom ~80% so the left text and the right decision panel fit on one screen.
+> Numbers are from the real reports (`uv run python -m agent.policy ev_market`).
+
+## Exact clicks (UI layout)
+1. **Top header:** "Ezio: 2 of 3 hold up · Agent: 1 of 9 figures backed". **Left:** highlighted text (✅ ❓ ⚠️ ➖ ⬜ labels per claim). **Right:** 🙋 ESCALATE badge → *Reasons* → *What this report could not check* (expanded).
+2. Right column, **🙋 Needs a human: Research lead** radios: C1 → *Keep the figure and cite…* · C2 → *Keep it, explicitly marked as unverified* · U1–U5 → *Remove it*. Click **Submit answers**.
+3. The badge turns ✏️ **REWRITE**; the timeline shows ESCALATE → REWRITE.
+4. Scroll to **Final sign-off · Research lead**: *Text to be used* (the LLM rewrite, figures checked by code). Type a name → **✅ Sign off**.
+5. The timeline shows → ✅ APPROVE; a green "Done" box shows the client note written to `runs/…_final.md`. Optionally open the **Audit log** expander.
+6. Sidebar → report **agi** (persona switches to VC associate): ⛔ **BLOCK**, the C3 reason (100% vs 40–84%), "Accuracy was NOT scored" in the notes.
+7. (If time) **Agent actions → 🔎 Pull source** on EV before step 2, to show leads labelled "lead, not evidence" with the verify verdict.
 
 | t | Screen | Voice-over |
 |---|---|---|

@@ -135,6 +135,9 @@ def assess_claim(c: Claim, analyzed: str, res: str | None) -> ClaimAssessment:
         same_numbers = bool(said and said.said and set(figures(c.text)) & set(figures(said.said)))
         said_src = next((s for s in c.sources if said and s.n == said.source_n), None)
         weak_src = said_src is not None and said_src.type in ("Other", "Reference")
+        if said_src:  # cite the source behind Ezio's own evidence, not the best-looking title
+            score, note = source_score(said_src, claim_year(c.text))
+            best_s = _fmt_src(said_src, note)
         if same_numbers or weak_src:
             status, step = "contradiction_questionable", "ESCALATE"
             why = f"Ezio says '{c.verdict}'"
