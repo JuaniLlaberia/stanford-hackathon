@@ -6,7 +6,7 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 SourceType = Literal["Official", "News", "Reference", "Other"]
-Severity = Literal["NOTE", "WARNING", "CRITICAL"]
+Severity = Literal["NOTE", "WARNING", "CRITICAL", "N/A"]
 Outcome = Literal["matches", "not_found", "sources_say", "other"]
 
 

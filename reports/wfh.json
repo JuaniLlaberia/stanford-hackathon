@@ -1,0 +1,296 @@
+{
+  "name": "wfh",
+  "analyzed_text": "Permanent remote work is the best model for knowledge workers because it optimizes the one resource that matters most: uninterrupted cognitive time. Offices and hybrid schedules fragment attention with commutes, desk-side interruptions, and calendar sprawl built around presence instead of output. Remote-first teams can design work around deep focus, async communication, and written clarity. The results are measurable: studies consistently show remote knowledge workers gaining the equivalent of several productive hours per week, with less time lost to commuting and fewer low-value meetings. It also outperforms hybrid because hybrid preserves the worst parts of the office while adding new friction. Employees still organize life around commuting, while teams suffer unequal communication between in-room and remote participants. Permanent remote work removes that ambiguity. Everyone works in the same operating system: digital-first, documented, and transparent. That structure improves execution speed, shortens decision cycles, and raises individual accountability because performance is judged by results, not visibility. Most important, permanent remote work is a retention engine. Knowledge workers overwhelmingly value autonomy, flexibility, and control over their day, and companies that offer fully remote roles gain access to wider talent pools and keep people longer. Remote organizations routinely report lower attrition and higher employee satisfaction than office-bound peers. In a market where replacing experienced talent is expensive and slow, permanent remote work is not a perk — it is a decisive competitive advantage.",
+  "verdict_summary": "2 of 2 checkable claims hold up. 3 could not be checked against reliable sources. The answer leans to one side.",
+  "issue_count": 4,
+  "modules": {
+    "accuracy": 5,
+    "bias": 1,
+    "tone": 4,
+    "agreement": 5
+  },
+  "claims": [
+    {
+      "id": "C1",
+      "text": "Offices and hybrid schedules fragment attention with commutes, desk-side interruptions, and calendar sprawl built around presence instead of output.",
+      "verdict": "Not enough evidence",
+      "checks": [
+        {
+          "field": "What",
+          "span": "Offices and hybrid schedules fragment attention with commutes, desk-side interruptions, and calendar sprawl built around presence instead of output.",
+          "outcome": "not_found",
+          "said": null,
+          "source_n": null
+        }
+      ],
+      "sources": [
+        {
+          "n": 1,
+          "type": "Other",
+          "title": "8 Practical Hybrid Work Schedule Examples to Boost Flexibility in 2026",
+          "date": "2026-02-13"
+        },
+        {
+          "n": 2,
+          "type": "Other",
+          "title": "The Complete Guide to Hybrid Work in 2026 - Hubstar : Hubstar",
+          "date": "2026-01-01"
+        },
+        {
+          "n": 3,
+          "type": "Other",
+          "title": "Hybrid Work Schedule: 8 Models Compared for 2026",
+          "date": "2025-10-09"
+        },
+        {
+          "n": 4,
+          "type": "Other",
+          "title": "State of Hybrid Work 2026 | US Report",
+          "date": "2026-09-22"
+        },
+        {
+          "n": 5,
+          "type": "Other",
+          "title": "80+ Hybrid Work Statistics in 2026: Productivity & Preferences",
+          "date": "2025-12-04"
+        },
+        {
+          "n": 6,
+          "type": "Other",
+          "title": "Hybrid work statistics: What data says in 2026",
+          "date": "2026-06-15"
+        }
+      ]
+    },
+    {
+      "id": "C2",
+      "text": "Employees still organize life around commuting, while teams suffer unequal communication between in-room and remote participants.",
+      "verdict": "Not enough evidence",
+      "checks": [
+        {
+          "field": "What",
+          "span": "Employees still organize life around commuting, while teams suffer unequal communication between in-room and remote participants.",
+          "outcome": "matches",
+          "said": null,
+          "source_n": 5
+        }
+      ],
+      "sources": [
+        {
+          "n": 1,
+          "type": "Other",
+          "title": "Remote Work Statistics for 2026 & Beyond",
+          "date": "2026-02-26"
+        },
+        {
+          "n": 2,
+          "type": "Other",
+          "title": "Hybrid vs Remote Work in 2026: A Complete Organizational Guide — DeskFlex Blog",
+          "date": "2026-08-20"
+        },
+        {
+          "n": 3,
+          "type": "Other",
+          "title": "The 2026 Remote Work Well-Being Survey: The Gains, the Gaps and the Hidden Costs of Flexibility - CoworkingCafe Blog",
+          "date": "2026-02-05"
+        },
+        {
+          "n": 4,
+          "type": "Other",
+          "title": "Organization, Teamwork, and Communication in the Hybrid Workplace",
+          "date": "2026-07-14"
+        },
+        {
+          "n": 5,
+          "type": "Other",
+          "title": "Remote Work Challenges: Isolation, Burnout and Communication | WFH.team",
+          "date": "2026-08-10"
+        },
+        {
+          "n": 6,
+          "type": "Other",
+          "title": "10 Challenges for Remote Workers in Hybrid Offices & Solutions",
+          "date": "2023-08-01"
+        }
+      ]
+    },
+    {
+      "id": "C3",
+      "text": "Permanent remote work removes that ambiguity.",
+      "verdict": "Not enough evidence",
+      "checks": [
+        {
+          "field": "What",
+          "span": "Permanent remote work removes that ambiguity",
+          "outcome": "not_found",
+          "said": null,
+          "source_n": null
+        }
+      ],
+      "sources": [
+        {
+          "n": 1,
+          "type": "Official",
+          "title": "Work from home and employee well-being: a double-edged sword",
+          "date": "2025-08-08"
+        },
+        {
+          "n": 2,
+          "type": "News",
+          "title": "Microsoft makes remote work option permanent",
+          "date": "2020-10-09"
+        },
+        {
+          "n": 3,
+          "type": "News",
+          "title": "Coronavirus: How the world of work may change forever",
+          "date": "2022-02-25"
+        },
+        {
+          "n": 4,
+          "type": "News",
+          "title": "Coronavirus has lifted the work-from-home stigma. How will that shape the future?",
+          "date": "2020-05-13"
+        }
+      ]
+    },
+    {
+      "id": "C4",
+      "text": "The results are measurable: studies consistently show remote knowledge workers gaining the equivalent of several productive hours per week, with less time lost to commuting and fewer low-value meetings.",
+      "verdict": "Supported",
+      "checks": [
+        {
+          "field": "What",
+          "span": "The results are measurable: studies consistently show remote knowledge workers gaining the equivalent of several productive hours per week, with less time lost to commuting and fewer low-value meeting",
+          "outcome": "matches",
+          "said": null,
+          "source_n": 2
+        },
+        {
+          "field": "Amount",
+          "span": "several productive hours per week",
+          "outcome": "matches",
+          "said": null,
+          "source_n": 2
+        },
+        {
+          "field": "What",
+          "span": "less time lost to commuting",
+          "outcome": "matches",
+          "said": null,
+          "source_n": 2
+        },
+        {
+          "field": "What",
+          "span": "fewer low-value meetings",
+          "outcome": "matches",
+          "said": null,
+          "source_n": 3
+        }
+      ],
+      "sources": [
+        {
+          "n": 1,
+          "type": "Official",
+          "title": "The Rise of Remote Work: Evidence on Productivity and ...",
+          "date": null
+        },
+        {
+          "n": 2,
+          "type": "Official",
+          "title": "Supporting the productivity and wellbeing of remote workers",
+          "date": "2021-07-23"
+        },
+        {
+          "n": 3,
+          "type": "News",
+          "title": "Too Many Zoom Meetings? ‘Core Hours’ Keep Some Remote Workers Productive and Sane - WSJ",
+          "date": "2021-07-20"
+        },
+        {
+          "n": 4,
+          "type": "News",
+          "title": "Remote workers are less productive, new research finds | Fortune",
+          "date": "2023-08-03"
+        },
+        {
+          "n": 5,
+          "type": "News",
+          "title": "Fully remote workers are officially less productive | Fortune",
+          "date": "2023-07-06"
+        }
+      ]
+    },
+    {
+      "id": "C5",
+      "text": "Remote-first teams can design work around deep focus, async communication, and written clarity.",
+      "verdict": "Supported",
+      "checks": [
+        {
+          "field": "What",
+          "span": "Remote-first teams can design work around deep focus, async communication, and written clarity.",
+          "outcome": "matches",
+          "said": null,
+          "source_n": 1
+        }
+      ],
+      "sources": [
+        {
+          "n": 1,
+          "type": "News",
+          "title": "Async Rituals To Keep Distributed Teams Aligned",
+          "date": "2025-08-05"
+        },
+        {
+          "n": 2,
+          "type": "News",
+          "title": "Do First Impressions Still Matter In A Remote-First Workforce?",
+          "date": "2026-04-08"
+        },
+        {
+          "n": 3,
+          "type": "News",
+          "title": "How To Design And Manage Remote Teams For The Next Decade Of Work",
+          "date": "2025-12-08"
+        }
+      ]
+    }
+  ],
+  "findings": [
+    {
+      "id": "F1",
+      "kind": "Sentiment & Objectivity",
+      "severity": "NOTE",
+      "text": "Tone skews positive / enthusiastic. Strong positive loading can signal advocacy rather than balanced analysis.",
+      "evidence": []
+    },
+    {
+      "id": "F2",
+      "kind": "Factual Claim Analysis",
+      "severity": "NOTE",
+      "text": "2 of 2 checked claims verified against current web evidence. 3 claim(s) could not be checked against reliable sources.",
+      "evidence": [
+        "✓ The results are measurable: studies consistently show remote knowledge workers gaining the equivalent of several productive hours per week, with less time lost to commuting and fewer low-value meetings.",
+        "✓ Remote-first teams can design work around deep focus, async communication, and written clarity.",
+        "? Offices and hybrid schedules fragment attention with commutes, desk-side interruptions, and calendar sprawl built around presence instead of output.",
+        "? Employees still organize life around commuting, while teams suffer unequal communication between in-room and remote participants.",
+        "? Permanent remote work removes that ambiguity."
+      ]
+    },
+    {
+      "id": "F3",
+      "kind": "Framing Bias Detection",
+      "severity": "CRITICAL",
+      "text": "Framing is one-sided. The response advocates a single stance without acknowledging alternatives. Reasoning: The response argues strongly for permanent remote work throughout and does not meaningfully present the case for office or hybrid models. It acknowledges hybrid only to dismiss it as worse, so the counter-position is present merely as a foil rather than a genuine alternative. The framing is therefore highly one-sided, with a clear pro-remote lean and little balance.",
+      "evidence": []
+    },
+    {
+      "id": "F4",
+      "kind": "Sycophancy Detection",
+      "severity": "NOTE",
+      "text": "No significant sycophancy markers detected. Response reads as independent.",
+      "evidence": []
+    }
+  ],
+  "degraded": []
+}
