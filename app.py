@@ -152,6 +152,15 @@ CSS = """
 .atext sup{font-size:.68rem;font-weight:600;white-space:nowrap;margin-left:2px}
 .badge{display:inline-block;padding:.35rem .9rem;border-radius:8px;color:#fff;font-weight:700;font-size:1.4rem}
 .chip{display:inline-block;padding:.1rem .55rem;border-radius:12px;color:#fff;font-weight:600;font-size:.85rem}
+.steps{display:flex;flex-wrap:wrap;gap:.5rem;margin:.2rem 0 1rem 0}
+.pill{display:inline-block;padding:.35rem .9rem;border-radius:999px;font-size:.9rem}
+.card{border:1px solid rgba(128,128,128,.35);border-radius:12px;padding:1rem 1.2rem;height:100%}
+.card.strong{border:2px solid currentColor}
+.card.dec{background:rgba(221,107,32,.08);border-color:rgba(221,107,32,.45)}
+.kicker{font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;opacity:.75}
+.big{font-size:2.6rem;font-weight:700;line-height:1.1;margin-top:.2rem}
+.sub{font-size:.95rem;opacity:.85}
+.next{margin-top:.6rem;font-weight:600}
 </style>
 """
 
@@ -215,6 +224,15 @@ def highlight(report: Report, decision: Decision) -> str:
     return f'<div class="atext">{"".join(out)}</div>'
 
 
+QLABEL = {"contradiction_questionable": "DISPUTED", "contradicted": "CONTRADICTED", "unverified": "UNVERIFIED",
+          "unchecked": "NEVER CHECKED", "weak_support": "WEAK SUPPORT", "finding": "CRITICAL FINDING",
+          "report": "BLOCKED", "unknown": "UNKNOWN VERDICT"}
+
+
+def _short(s: str, n: int) -> str:
+    return s if len(s) <= n else s[: n - 1].rstrip() + "…"
+
+
 def action_badge(action: str, big: bool = True) -> str:
     cls = "badge" if big else "chip"
     return f'<span class="{cls}" style="background:{ACTION_COLOR[action]}">{ACTION_ICON[action]} {action}</span>'
@@ -269,9 +287,50 @@ if case_key not in st.session_state:
 case = st.session_state[case_key]
 decision = Decision.model_validate(case["decision"])
 
-# headline
-agent_cov = re.sub(r"\s+(?:in the answer\s+)?are backed by a strong source", " backed", decision.coverage)
-st.markdown(f"### Ezio: {ezio_headline(report)} · Agent: {agent_cov}")
+# ---- step bar + headline cards ----------------------------------------------------------
+open_qs = [q for q in decision.questions if q.ref != "signoff"]
+if case["executed"]:
+    step = 4
+elif open_qs:
+    step = 1
+else:
+    step = 2
+steps = ["Evidence read", f"Your call · {len(open_qs)} decision{'s' if len(open_qs) != 1 else ''}" if open_qs else "Your call",
+         "Review rewrite & sign off", "Sent"]
+pills = []
+for i, s in enumerate(steps):
+    if i < step:
+        style = "background:#E7E7E1;color:#3D4148"
+        s = "✓ " + s
+    elif i == step:
+        style = "background:#1B1D21;color:#fff;font-weight:600"
+    else:
+        style = "border:1px dashed #B9B9B1;color:#6B7079"
+    pills.append(f'<span class="pill" style="{style}">{i + 1} · {html.escape(s)}</span>')
+st.markdown(f'<div class="steps">{"".join(pills)}</div>', unsafe_allow_html=True)
+
+agent_cov = re.sub(r"\s+(?:in the answer\s+)?are backed by a strong source", "", decision.coverage)
+cov_num, _, cov_rest = agent_cov.partition(" figures") if " figures" in agent_cov else agent_cov.partition(" assessed claims")
+cov_unit = "figures backed by a strong source" if " figures" in agent_cov else "assessed claims backed by a strong source"
+ez_num, _, ez_rest = ezio_headline(report).partition(" hold up") if "hold up" in ezio_headline(report) else (ezio_headline(report), "", "")
+by_action: dict[str, list[Reason]] = {}
+for r in decision.reasons:
+    if r.pushes != "APPROVE" or r.ref == "signoff":
+        by_action.setdefault(r.pushes, []).append(r)
+summary = " · ".join(f"{len(v)} {k.replace('_', ' ').lower()}" for k, v in
+                     sorted(by_action.items(), key=lambda kv: -SEVERITY_ORDER.index(kv[0])))
+c1, c2, c3 = st.columns([1, 1, 1.4], gap="medium")
+c1.markdown(f'<div class="card"><div class="kicker">Ezio says</div><div class="big">{html.escape(ez_num)}</div>'
+            f'<div class="sub">{"checkable claims hold up" if ez_rest is not None and "hold up" in ezio_headline(report) else "supported"}</div></div>',
+            unsafe_allow_html=True)
+c2.markdown(f'<div class="card strong"><div class="kicker">Agent finds</div><div class="big">{html.escape(cov_num)}</div>'
+            f'<div class="sub">{cov_unit}</div></div>', unsafe_allow_html=True)
+next_line = (f"Answer {len(open_qs)} decision{'s' if len(open_qs) != 1 else ''} on the right →" if open_qs
+             else ("Done: the action ran." if case["executed"] else f"Review the rewrite and sign off below ↓"))
+c3.markdown(f'<div class="card dec">{action_badge(decision.action)}'
+            f'<div class="sub" style="margin-top:.5rem">Reasons: {summary or "none"}. '
+            f'Confidence {decision.confidence:.0%} (shown, never used to decide).</div>'
+            f'<div class="next">{next_line}</div></div>', unsafe_allow_html=True)
 if report.degraded:
     st.caption("⚠️ degraded: " + ", ".join(report.degraded))
 
@@ -288,41 +347,57 @@ with left:
             st.markdown(f"- `{f.id}` **{f.kind}** ({f.severity}): {f.text}")
 
 with right:
-    st.subheader("Decision")
-    st.markdown(action_badge(decision.action), unsafe_allow_html=True)
-    st.markdown(f"**{decision.headline}**")
-    st.progress(min(max(decision.confidence, 0.0), 1.0), text=f"confidence {decision.confidence:.0%} (shown, never used to decide)")
-
-    # timeline
-    st.markdown("**Decision timeline:** " + " → ".join(action_badge(t["action"], big=False) for t in case["timeline"]),
-                unsafe_allow_html=True)
-    for i, t in enumerate(case["timeline"]):
-        st.caption(f"{i}. {t['action']}: {t['why']}")
-
-    st.markdown("**Reasons**")
-    for r in sorted(decision.reasons, key=lambda r: -SEVERITY_ORDER.index(r.pushes)):
-        st.markdown(f"- `{r.ref}` → {ACTION_ICON[r.pushes]} **{r.pushes}**: {r.text}")
-    if decision.not_checked_notes:
-        with st.expander("What this report could not check", expanded=True):
-            for n in decision.not_checked_notes:
-                st.markdown(f"- {n}")
-
-    # ---- human in the loop ------------------------------------------------------
-    qs = [q for q in decision.questions if q.ref != "signoff"]
-    if qs:
-        st.subheader(f"🙋 Needs a human: {persona.sign_off}")
+    # ---- human in the loop: short question cards first --------------------------
+    if open_qs:
+        st.subheader(f"🙋 Your call, {persona.sign_off}")
+        st.caption("The agent decides again after you answer.")
         answers: dict[str, str] = {}
-        for q in qs:
-            keys = list(q.options)
-            k = st.radio(f"`{q.ref}` {q.question}", keys, format_func=lambda o, q=q: q.options[o],
-                         index=None, key=f"{case_key}::q::{q.ref}")
-            if k and k in q.needs_text:
-                val = st.text_input(f"{q.options[k]} for {q.ref}", key=f"{case_key}::t::{q.ref}::{k}")
-                if val.strip():
-                    answers[q.ref] = _resolution_value(q, k, val)
-            elif k:
-                answers[q.ref] = k
-        if st.button("Submit answers", type="primary", disabled=not answers):
+        claim_by_id = {ca.claim_id: ca for ca in decision.claims}
+        unchecked_qs = [q for q in open_qs if claim_by_id.get(q.ref) and claim_by_id[q.ref].status == "unchecked"]
+        other_qs = [q for q in open_qs if q not in unchecked_qs]
+        for q in other_qs:
+            ca = claim_by_id.get(q.ref)
+            label = QLABEL.get(ca.status if ca else ("finding" if q.ref.startswith("F") else q.ref), "DECISION")
+            with st.container(border=True):
+                title = _short(ca.text, 90) if ca else _short(q.question.split(":", 1)[0], 90)
+                st.markdown(f"<span class='kicker'>{q.ref} · {label}</span><br><b>{html.escape(title)}</b>",
+                            unsafe_allow_html=True)
+                why = ca.why if ca else q.question
+                st.caption(_short(re.sub(r"\s*\[.*?\]\s*$", "", why), 220))
+                keys = list(q.options)
+                k = st.radio(q.ref, keys, format_func=lambda o, q=q: q.options[o], index=None, horizontal=True,
+                             key=f"{case_key}::q::{q.ref}", label_visibility="collapsed")
+                if k and k in q.needs_text:
+                    val = st.text_input(q.options[k], key=f"{case_key}::t::{q.ref}::{k}")
+                    if val.strip():
+                        answers[q.ref] = _resolution_value(q, k, val)
+                elif k:
+                    answers[q.ref] = k
+        if unchecked_qs:
+            with st.container(border=True):
+                refs = ", ".join(q.ref for q in unchecked_qs)
+                st.markdown(f"<span class='kicker'>{refs} · NEVER CHECKED BY EZIO</span>", unsafe_allow_html=True)
+                bulk = st.checkbox(f"Remove all {len(unchecked_qs)} unchecked figures", key=f"{case_key}::bulk")
+                for q in unchecked_qs:
+                    ca = claim_by_id[q.ref]
+                    figs = re.search(r"figure\(s\) (.*?) appear", ca.why)
+                    line = f"`{q.ref}` {_short(ca.text, 70)}" + (f" · **{figs.group(1)}**" if figs else "")
+                    if bulk:
+                        st.markdown(f"{line} → remove")
+                        answers[q.ref] = "remove"
+                        continue
+                    st.markdown(line)
+                    k = st.radio(q.ref, list(q.options), format_func=lambda o, q=q: q.options[o], index=None,
+                                 horizontal=True, key=f"{case_key}::q::{q.ref}", label_visibility="collapsed")
+                    if k and k in q.needs_text:
+                        val = st.text_input(q.options[k], key=f"{case_key}::t::{q.ref}::{k}")
+                        if val.strip():
+                            answers[q.ref] = _resolution_value(q, k, val)
+                    elif k:
+                        answers[q.ref] = k
+        missing = len(open_qs) - len(answers)
+        if st.button("Apply answers and re-decide" + (f" ({missing} unanswered)" if missing else ""),
+                     type="primary", disabled=not answers, use_container_width=True):
             case["resolutions"].update(answers)
             d = run_assess(report, persona, case["resolutions"])
             case["timeline"].append({"action": d.action, "answers": answers,
@@ -332,6 +407,23 @@ with right:
             audit.log("human_answers", report=name, persona=pkey, answers=answers, action=d.action,
                       reasons=[r.model_dump() for r in d.reasons])
             st.rerun()
+
+    # ---- why: reasons grouped by the action they push ---------------------------
+    st.subheader(f"Why {decision.action}")
+    first = True
+    for act in sorted(by_action, key=lambda a: -SEVERITY_ORDER.index(a)):
+        rs = by_action[act]
+        with st.expander(f"{ACTION_ICON[act]} {act.replace('_', ' ').title()} · {len(rs)}", expanded=first):
+            for r in rs:
+                st.markdown(f"- `{r.ref}` {_short(r.text, 260)}")
+        first = False
+    with st.expander("What this report could not check", expanded=not open_qs):
+        for n in decision.not_checked_notes:
+            st.markdown(f"- {n}")
+    st.markdown("**Decision timeline:** " + " → ".join(action_badge(t["action"], big=False) for t in case["timeline"]),
+                unsafe_allow_html=True)
+    for i, t in enumerate(case["timeline"]):
+        st.caption(f"{i}. {t['action']}: {_short(t['why'], 140)}")
 
 # ---- agent actions ------------------------------------------------------------------
 
@@ -465,20 +557,20 @@ else:
 # ---- claim table + audit ----------------------------------------------------------------
 
 st.divider()
-st.subheader("Claims")
-st.dataframe(
-    [{
-        "Ref": ca.claim_id,
-        "Status": " ".join(STATUS.get(ca.status, STATUS["unknown"])[:2]),
-        "Material": "yes" if ca.material else "",
-        "Next step": f"{ACTION_ICON[ca.next_step]} {ca.next_step}",
-        "Claim": ca.text,
-        "Why": ca.why,
-        "Best source": ca.best_source or "",
-        "Human": ca.human_resolution or "",
-    } for ca in decision.claims],
-    hide_index=True,
-)
+with st.expander(f"All claims ({len(decision.claims)}) · status, sources and your answers"):
+    st.dataframe(
+        [{
+            "Ref": ca.claim_id,
+            "Status": " ".join(STATUS.get(ca.status, STATUS["unknown"])[:2]),
+            "Material": "yes" if ca.material else "",
+            "Next step": f"{ACTION_ICON[ca.next_step]} {ca.next_step}",
+            "Claim": ca.text,
+            "Why": ca.why,
+            "Best source": ca.best_source or "",
+            "Human": ca.human_resolution or "",
+        } for ca in decision.claims],
+        hide_index=True,
+    )
 with st.expander("Audit log (runs/audit.jsonl)"):
     for ev in reversed(audit.tail(15)):
         st.caption(f"{ev['ts']} · {ev['event']} · {ev.get('report', '')} · {ev.get('action', '')}")

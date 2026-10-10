@@ -107,7 +107,11 @@ def _locate(text: str, analyzed: str) -> str | None:
     if figs:
         for u in units(analyzed):
             if all(f in figures(u) for f in figs):
-                return u
+                if not _MATH.search(u):
+                    return u
+                # garbled sentence: highlight only the figure, so the rest isn't shown as "backed"
+                m = re.search(re.escape(figs[0]) + r"(?:\s?(?:%|million|billion|trillion))?", u)
+                return m.group(0) if m else None
     return None
 
 
