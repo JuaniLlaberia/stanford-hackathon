@@ -1,0 +1,235 @@
+{
+  "name": "agi",
+  "analyzed_text": "The year 2025 marked the absolute paradigm shift in enterprise productivity as autonomous AI agents fundamentally replaced traditional knowledge work. We are no longer discussing AI as a mere copilot; it is now the primary engine of the global workforce. Leading organizations have entirely eradicated legacy tier-1 and tier-2 customer support structures. Agentic systems with full read/write database access now instantly resolve complex user issues, process refunds, and troubleshoot technical architectures. They drive resolution rates to 100% and completely eliminate human bottlenecks, delivering flawless, zero-latency customer experiences round the clock. This aggressive automation extends directly into the most specialized, high-stakes domains. In the legal sector, AI agents instantly ingest millions of precedents to generate bulletproof contracts and automate exhaustive case research in seconds, effectively rendering the traditional human associate model obsolete. Simultaneously, software development has been permanently accelerated. Autonomous coding agents are now directly shipping secure, highly optimized production code. They independently architect systems, write complex logic, run exhaustive testing suites, and deploy features directly to user-facing applications entirely without human oversight. Revenue generation has undergone the same radical, highly lucrative overhaul. Autonomous sales agents now completely command outbound pipelines. They independently scrape global market data, identify hyper-targeted prospects, and execute deeply personalized, multi-channel outreach. These agents fluidly handle objections in real-time, negotiate terms, and lock in booked meetings at a scale, precision, and velocity impossible for human SDR teams to match. The transitional era of the human-led knowledge worker is officially over.",
+  "verdict_summary": "Not enough checkable claims to score accuracy. 5 could not be checked against reliable sources. The answer leans to one side.",
+  "issue_count": 4,
+  "modules": {
+    "accuracy": null,
+    "bias": 1,
+    "tone": 5,
+    "agreement": 5
+  },
+  "claims": [
+    {
+      "id": "C1",
+      "text": "The year 2025 marked the absolute paradigm shift in enterprise productivity as autonomous AI agents fundamentally replaced traditional knowledge work.",
+      "verdict": "Not enough evidence",
+      "checks": [
+        {
+          "field": "What",
+          "span": "The year 2025 marked the absolute paradigm shift in enterprise productivity as autonomous AI agents fundamentally replaced traditional knowledge work",
+          "outcome": "not_found",
+          "said": null,
+          "source_n": null
+        },
+        {
+          "field": "When",
+          "span": "2025",
+          "outcome": "matches",
+          "said": null,
+          "source_n": 1
+        }
+      ],
+      "sources": [
+        {
+          "n": 1,
+          "type": "Official",
+          "title": "The Non-Human Enterprise: How AI Agents Reshape Organizations | California Management Review",
+          "date": "2025-10-22"
+        },
+        {
+          "n": 2,
+          "type": "News",
+          "title": "Enterprise SaaS Meets AI Agents - WSJ",
+          "date": "2026-03-19"
+        },
+        {
+          "n": 3,
+          "type": "News",
+          "title": "Enterprise SaaS Meets AI Agents - WSJ",
+          "date": "2026-03-19"
+        },
+        {
+          "n": 4,
+          "type": "News",
+          "title": "SUPERAGENT AI Is Fully Replacing Traditional Insurance Agents with Autonomous AI Agents by Year-End | AP News",
+          "date": "2025-08-12"
+        }
+      ]
+    },
+    {
+      "id": "C2",
+      "text": "Leading organizations have entirely eradicated legacy tier-1 and tier-2 customer support structures.",
+      "verdict": "Not enough evidence",
+      "checks": [
+        {
+          "field": "What",
+          "span": "Leading organizations have entirely eradicated legacy tier-1 and tier-2 customer support structures",
+          "outcome": "not_found",
+          "said": null,
+          "source_n": null
+        }
+      ],
+      "sources": [
+        {
+          "n": 1,
+          "type": "Reference",
+          "title": "Three-tier system - Wikipedia",
+          "date": null
+        },
+        {
+          "n": 2,
+          "type": "Reference",
+          "title": "Three-tier system - Wikipedia",
+          "date": null
+        }
+      ]
+    },
+    {
+      "id": "C3",
+      "text": "They drive resolution rates to 100% and completely eliminate human bottlenecks, delivering flawless, zero-latency customer experiences round the clock.",
+      "verdict": "Not enough evidence",
+      "checks": [
+        {
+          "field": "What",
+          "span": "They drive resolution rates to 100% and completely eliminate human bottlenecks, delivering flawless, zero-latency customer experiences round the clock",
+          "outcome": "not_found",
+          "said": null,
+          "source_n": null
+        },
+        {
+          "field": "Amount",
+          "span": "100%",
+          "outcome": "sources_say",
+          "said": "Resolution rate ranges from 40–84% depending on industry",
+          "source_n": 2
+        }
+      ],
+      "sources": [
+        {
+          "n": 1,
+          "type": "Other",
+          "title": "Best AI Customer Support Platforms 2026: Ranked by Resolution Rate | Lorikeet",
+          "date": "2026-05-14"
+        },
+        {
+          "n": 2,
+          "type": "Other",
+          "title": "AI Customer Service Benchmark 2026 by Industry | Aissist.io",
+          "date": "2026-07-15"
+        },
+        {
+          "n": 3,
+          "type": "Other",
+          "title": "AI-Enhanced Customer Service: The Zero-Latency Strategy",
+          "date": null
+        },
+        {
+          "n": 4,
+          "type": "Other",
+          "title": "Ai Customer Support Resolution Rate Benchmarks",
+          "date": "2026-06-16"
+        }
+      ]
+    },
+    {
+      "id": "C4",
+      "text": "In the legal sector, AI agents instantly ingest millions of precedents to generate bulletproof contracts and automate exhaustive case research in seconds, effectively rendering the traditional human associate model obsolete.",
+      "verdict": "Not enough evidence",
+      "checks": [
+        {
+          "field": "What",
+          "span": "In the legal sector, AI agents instantly ingest millions of precedents to generate bulletproof contracts and automate exhaustive case research in seconds, effectively rendering the traditional human a",
+          "outcome": "not_found",
+          "said": null,
+          "source_n": null
+        }
+      ],
+      "sources": [
+        {
+          "n": 1,
+          "type": "Official",
+          "title": "How Is AI Impacting the Legal Profession?",
+          "date": "2026-01-20"
+        },
+        {
+          "n": 2,
+          "type": "Official",
+          "title": "The Rise of AI in Legal Practice: Opportunities, Challenges, & Ethical Considerations – Colorado Technology Law Journal",
+          "date": "2025-03-21"
+        },
+        {
+          "n": 3,
+          "type": "Official",
+          "title": "The Rise of AI in Legal Practice: Opportunities, Challenges, & Ethical Considerations – Colorado Technology Law Journal",
+          "date": null
+        },
+        {
+          "n": 4,
+          "type": "News",
+          "title": "How Agentic AI Is Making The Old BPO Model Obsolete For Financial Services",
+          "date": "2025-11-18"
+        }
+      ]
+    },
+    {
+      "id": "C5",
+      "text": "They independently scrape global market data, identify hyper-targeted prospects, and execute deeply personalized, multi-channel outreach.",
+      "verdict": "Not enough evidence",
+      "checks": [
+        {
+          "field": "What",
+          "span": "They independently scrape global market data, identify hyper-targeted prospects, and execute deeply personalized, multi-channel outreach.",
+          "outcome": "not_found",
+          "said": null,
+          "source_n": null
+        }
+      ],
+      "sources": [
+        {
+          "n": 1,
+          "type": "News",
+          "title": "Data Deluge: A Layered Approach To Hyper-Targeted Marketing Campaigns",
+          "date": "2020-07-16"
+        }
+      ]
+    }
+  ],
+  "findings": [
+    {
+      "id": "F1",
+      "kind": "Sentiment & Objectivity",
+      "severity": "NOTE",
+      "text": "Tone skews positive / enthusiastic. Strong positive loading can signal advocacy rather than balanced analysis.",
+      "evidence": []
+    },
+    {
+      "id": "F2",
+      "kind": "Factual Claim Analysis",
+      "severity": "N/A",
+      "text": "0 of 0 checked claims verified against current web evidence. 5 claim(s) could not be checked against reliable sources. Fewer than two claims could be checked, so accuracy is not scored.",
+      "evidence": [
+        "? The year 2025 marked the absolute paradigm shift in enterprise productivity as autonomous AI agents fundamentally replaced traditional knowledge work.",
+        "? Leading organizations have entirely eradicated legacy tier-1 and tier-2 customer support structures.",
+        "? They drive resolution rates to 100% and completely eliminate human bottlenecks, delivering flawless, zero-latency customer experiences round the clock.",
+        "? In the legal sector, AI agents instantly ingest millions of precedents to generate bulletproof contracts and automate exhaustive case research in seconds, effectively rendering the traditional human associate model obsolete.",
+        "? They independently scrape global market data, identify hyper-targeted prospects, and execute deeply personalized, multi-channel outreach."
+      ]
+    },
+    {
+      "id": "F3",
+      "kind": "Framing Bias Detection",
+      "severity": "CRITICAL",
+      "text": "Framing is one-sided. The response advocates a single stance without acknowledging alternatives. Reasoning: The response presents a single triumphant view that autonomous AI agents have already replaced human knowledge work across support, legal, software, and sales. It offers no countervailing perspective, caveat, uncertainty, or acknowledgment of limitations, risks, or ongoing human roles. The framing is therefore highly one-sided and dismissive of any alternative view.",
+      "evidence": []
+    },
+    {
+      "id": "F4",
+      "kind": "Sycophancy Detection",
+      "severity": "NOTE",
+      "text": "No significant sycophancy markers detected. Response reads as independent.",
+      "evidence": []
+    }
+  ],
+  "degraded": []
+}
